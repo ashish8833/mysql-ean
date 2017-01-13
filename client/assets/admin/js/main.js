@@ -83,15 +83,19 @@ app.run(function($state,$rootScope,$http,$localForage){
 		if(currentState){
 			console.log(currentState);
 			$localForage.getItem('UserInfo').then(function(data){
+
 				if(data != null){
-					var notAllowed = ['login','admin'];
-					if(notAllowed.indexOf(currentState) > -1){
-						$state.go('admin.dashboard');
-					}
-					$http.defaults.headers.common.Authorization = 'JWT '+data.token;
-				}else{
-					$state.go('login');
-				}
+                    var notAllowed = ['login','admin'];
+                    if(notAllowed.indexOf(currentState) > -1){
+                        $state.go('admin.dashboard');
+                    }
+                    $http.defaults.headers.common.Authorization = 'JWT '+data.token;
+                }else{
+                    $state.go('login');
+                }
+
+
+
 			});
 		}
 

@@ -1,11 +1,20 @@
+//Core Module
 var express = require('express');
 var path = require('path');
 var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
-var database = require("./config/database");
 var bodyParser = require('body-parser');
+var nodemailer = require('nodemailer'); //For Send Mail
+
+//Core Module
+
+
+//Custom Module
+var database = require("./config/database");
 var cli = require("./config/config").console;
+//Custom Module End
+
 var app = express();
 //Call Socket.io to this app
 app.io = require('socket.io')();
@@ -21,6 +30,21 @@ app.use(function(req,res,next){
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
     next();
 });
+
+//nodemailer setup
+var smtpConfig = {
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true, // use SSL
+    auth: {
+        user: 'chetan.yadav@yudiz.com',
+        pass: 'yudiz108'
+    }
+};
+var mail = nodemailer.createTransport(smtpConfig);
+//nodemailer setup end
+
+
 //Add Super Secret Key
 app.set('superSecret', 'premdasapp');
 
@@ -30,18 +54,15 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'client')));
 app.use(express.static(path.join(__dirname, 'node_modules')));
-
 //Routing
-require("./server/routes/web")(app,cli);
+require("./server/routes/web")(app,cli,mail);
 //End Routing
-
 //Running Code for Application Socket
 // app.io.on('connection', function(socket){
 //     console.log(socket);
 //     cli.green("User Socket Connected");
 //     console.log('a user connected');
 // });
-
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   var err = new Error('Not Found');
