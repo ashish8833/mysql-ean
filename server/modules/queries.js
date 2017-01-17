@@ -31,6 +31,24 @@ var Users = {
     },
     forgotPass:function(body,cb){
         db.query("UPDATE tbl_users SET vPassword = ? WHERE vEmail = ?",[md5(body.vNewPassword),body.vEmail],cb);
+    },
+    getAllUser:function(body,callback){
+        db.query('SELECT * FROM tbl_users WHERE eStatus != "d" AND vUserType = "user"',callback);
+    },
+    getSettings: function(body,cb){
+        db.query("SELECT * FROM mst_site_settings WHERE eEditable = ? ORDER BY iFieldId",['y'], cb);
+    },
+    saveSettings : function(params, cb){
+        db.query("UPDATE mst_site_settings SET vValue = ? WHERE iFieldId = ?", params, cb);
+    },
+    getUserById:function(body,cb){
+      db.query("SELECT * FROM tbl_users WHERE iUserId = ?",[body.id],cb);
+    },
+    deleteUserById:function(body,cb){
+        db.query("UPDATE tbl_users SET eStatus = ? WHERE iUserId = ?",['d',body.id],cb);
+    },
+    updateUserById:function(body){
+        //db.query();
     }
 
 };

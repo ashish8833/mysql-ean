@@ -3,9 +3,13 @@ var app = angular.module('main',['ui.router',
     'ui.bootstrap',
     'ngAnimate',
     'oc.lazyLoad',
-    'LocalForageModule'
+    'LocalForageModule',
+	'toastr',
+    'datatables',
+    'ngResource'
+
 ]);
-app.config(function($stateProvider,$urlRouterProvider,$locationProvider,$ocLazyLoadProvider,$localForageProvider){
+app.config(function($stateProvider,$urlRouterProvider,$locationProvider,$ocLazyLoadProvider,$localForageProvider,toastrConfig){
 	$ocLazyLoadProvider.config({
 		cssFilesInsertBefore:'ng_load_plugins_before'
 	});
@@ -22,7 +26,7 @@ app.config(function($stateProvider,$urlRouterProvider,$locationProvider,$ocLazyL
                         insertBefore: '#ng_load_plugins_before', // load the above css files before
                         files: [
                             'assets/admin/pages/css/login.css',
-                            'assets/admin/js/controllers/loginctrl.js'
+                            'assets/admin/js/controllers/loginctrl.js',
                         ]
 				});
 			}]
@@ -56,14 +60,90 @@ app.config(function($stateProvider,$urlRouterProvider,$locationProvider,$ocLazyL
 				console.log("Lazy Load Call");
 				return $ocLazyLoad.load({
 					name:'main',
-					insertBefore: '#ng_load_plugins_before',
+                    insertBefore:'#ng_load_plugins_before',
 					files:[
 						'assets/admin/js/controllers/dashboardctrl.js'
 					]
 				});
 			}]
 		}
-	});
+	})
+    .state('admin.cpass',{
+            url:'/cpass',
+            templateUrl:'templates/admin/cpass.html',
+            data :{ pageTitle:'Change Password',bodyClass:'page-header-fixed page-sidebar-closed-hide-logo page-sidebar-closed-hide-logo' },
+            controller:'ChangePassCtrl',
+            resolve:{
+                depends:['$ocLazyLoad',function($ocLazyLoad){
+                    console.log("Lazy Load Call");
+                    return $ocLazyLoad.load({
+                        name:'main',
+                        insertBefore:'#ng_load_plugins_before',
+                        files:[
+                            'assets/admin/js/controllers/changepassctrl.js',
+                        ]
+                    });
+            }]
+    	}
+    })
+    .state('admin.sitesetting',{
+        url:'/sitesetting',
+        templateUrl:'templates/admin/sitesettings.html',
+        data :{ pageTitle:'Change Password',bodyClass:'page-header-fixed page-sidebar-closed-hide-logo page-sidebar-closed-hide-logo' },
+        controller:'SiteSettingsCtrl',
+        resolve:{
+            depends:['$ocLazyLoad',function($ocLazyLoad){
+                console.log("Lazy Load Call");
+                return $ocLazyLoad.load({
+                    name:'main',
+                    insertBefore:'#ng_load_plugins_before',
+                    files:[
+                        'assets/admin/js/controllers/sitesettingctrl.js',
+                    ]
+                });
+            }]
+        }
+    })
+    .state('admin.users',{
+            url:'/users',
+            templateUrl:'templates/admin/users.html',
+            data :{ pageTitle:'Change Password',bodyClass:'page-header-fixed page-sidebar-closed-hide-logo page-sidebar-closed-hide-logo' },
+            controller:'UsersCtrl',
+            resolve:{
+                depends:['$ocLazyLoad',function($ocLazyLoad){
+                    console.log("Lazy Load Call");
+                    return $ocLazyLoad.load({
+                        name:'main',
+                        insertBefore:'#ng_load_plugins_before',
+                        files:[
+                            'assets/admin/js/controllers/usersctrl.js',
+                            //This css for datatable with bootstrap class name table table-striped table-bordered
+                            // 'node_modules/datatables/media/css/jquery.dataTables.min.css'
+                           ]
+                    });
+                }]
+            }
+    })
+    .state('admin.userdetails',{
+            url:'/userdetails/:id',
+            templateUrl:'templates/admin/userdetails.html',
+            data :{ pageTitle:'Change Password',bodyClass:'page-header-fixed page-sidebar-closed-hide-logo page-sidebar-closed-hide-logo' },
+            controller:'UserDetailsCtrl',
+            resolve:{
+                depends:['$ocLazyLoad',function($ocLazyLoad){
+                    console.log("Lazy Load Call");
+                    return $ocLazyLoad.load({
+                        name:'main',
+                        insertBefore:'#ng_load_plugins_before',
+                        files:[
+                            'assets/admin/pages/css/profile.css',
+                            'assets/admin/js/controllers/userdetailsctrl.js',
+
+                        ]
+                    });
+                }]
+            }
+    });
 	$locationProvider.hashPrefix('');
 
 	// To define only one db driver - Logout issue (Because WebSql and Indexdb both store data)
@@ -74,6 +154,15 @@ app.config(function($stateProvider,$urlRouterProvider,$locationProvider,$ocLazyL
         size        : 4980736, // Size of database, in bytes. WebSQL-only for now.
     });
 
+    angular.extend(toastrConfig, {
+        allowHtml: false,
+        closeButton: false,
+        closeHtml: '<button>&times;</button>',
+        extendedTimeOut: 1000,
+		timeOut: 3000,
+        toastClass: 'toast',
+        titleClass: 'toast-title'
+    });
 
 });
 
@@ -83,19 +172,21 @@ app.run(function($state,$rootScope,$http,$localForage){
 		if(currentState){
 			console.log(currentState);
 			$localForage.getItem('UserInfo').then(function(data){
-
 				if(data != null){
-                    var notAllowed = ['login','admin'];
-                    if(notAllowed.indexOf(currentState) > -1){
-                        $state.go('admin.dashboard');
-                    }
-                    $http.defaults.headers.common.Authorization = 'JWT '+data.token;
+					console.log(data.status === 200);
+                    if(data.status === 200){
+						var notAllowed = ['login','admin'];
+                        if(notAllowed.indexOf(currentState) > -1){
+                            $state.go('admin.dashboard');
+                        }
+                        $http.defaults.headers.common.Authorization = 'JWT '+data.token;
+					}
+					else{
+                    	$state.go("login");
+					}
                 }else{
                     $state.go('login');
                 }
-
-
-
 			});
 		}
 
@@ -172,5 +263,34 @@ app.directive('ngSpinnerBar', ['$rootScope',
         };
     }
 ]);
+//Angular Bootstrap Switch
+app.directive('bootstrapSwitch', [
+    function() {
+        return {
+            restrict: 'A',
+            require: '?ngModel',
+            link: function(scope, element, attrs, ngModel) {
+                element.bootstrapSwitch();
 
+                element.on('switchChange.bootstrapSwitch', function(event, state) {
+                    if (ngModel) {
+                        scope.$apply(function() {
+                            ngModel.$setViewValue(state);
+                        });
+                    }
+                });
+
+                scope.$watch(attrs.ngModel, function(newValue, oldValue) {
+                    if (newValue) {
+                        console.log("True");
+                        element.bootstrapSwitch('state', true, true);
+                    } else {
+                        console.log("False");
+                        element.bootstrapSwitch('state', false, true);
+                    }
+                });
+            }
+        };
+    }
+]);
 

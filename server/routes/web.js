@@ -1,5 +1,7 @@
+var formidable = require("formidable");
 var queries = require("../modules/queries");
 var md5 = require("md5");
+var path = require('path');
 var validator = require("validator");
 var jwt = require('jsonwebtoken'); // use for jwt.sign
 var passport = require("passport");
@@ -52,11 +54,7 @@ module.exports = function (app,cli,mail) {
                 });
             });
 
-		    app.post('/user',passport.authenticate('jwt',{session:false}),function(req,res){
-                res.json({message:"Its Work"});
-            });
-		    
-		    app.post('/logout',passport.authenticate('jwt',{session:false}),function (req,res) {
+            app.post('/logout',passport.authenticate('jwt',{session:false}),function (req,res) {
                 if(req.user.length > 0 ){
                     queries.logOut({
                         "iDeviceId":req.user[0].iDeviceId
@@ -89,18 +87,21 @@ module.exports = function (app,cli,mail) {
                                 queries.changePassword(postData,function(error,rows){
                                     cli.green("Password Change");
                                     if (error) throw error;
-                                    res.status(200).json({
+                                    res.json({
+                                        'status':200,
                                        'message':'Password Change Successfully.'
                                     });
                                 })
                             }else{
-                                res.status(404).json({
+                                res.json({
+                                    'status':400,
                                     'message': 'Old password does not match.'
                                 })
                             }
                         })
                     }else{
-                    res.status(404).json({
+                    res.json({
+                       'status':404,
                        'message':'Unauthorized'
                     });
                 }
@@ -151,6 +152,143 @@ module.exports = function (app,cli,mail) {
                 }
             });
 
+            app.post('/settings',passport.authenticate('jwt',{session:false}),function(req,res){
+                cli.blue("Setting call");
+                if(req.user.length > 0){
+                    queries.getSettings(req,function(error,rows){
+                        res.json({
+                            'status':200,
+                            'message':'Success',
+                            'result':rows
+                        })
+                    });
+                }else{
+                    res.json({
+                        "status":404,
+                        "message":"Something went wrong"
+                    })
+                }
+            });
+
+            app.post('/settingspost',passport.authenticate('jwt',{session:false}),function(req,res){
+                cli.blue("Setting call");
+                if(req.user.length > 0){
+                    cli.blue("PAth");
 
 
-}
+                    var form = new formidable.IncomingForm();
+                    // specify that we want to allow the user to upload multiple files in a single request
+                    //form.multiples = true;
+                    // store all uploads in the /uploads directory
+                    form.uploadDir = path.join(__dirname, '/uploads');
+
+
+                    // every time a file has been uploaded successfully,
+                    // rename it to it's orignal name
+                    form.on('file', function(field, file) {
+                        var filename = md5(new Date().getTime() + file.name + req.user[0].iUserId) + path.extname(file.name);
+                        fs.rename(file.path, path.join(form.uploadDir, filename));
+                        services.saveSettings([filename, field], function(err, row) {});
+
+                    });
+                    form.on('field', function(field, value) {
+                        queries.saveSettings([value, field], function(err, row) {
+                            if (err) throw err;
+                        });
+                    });
+
+                    // log any errors that occur
+                    form.on('error', function(err) {
+                        //console.log('An error has occured: \n' + err);
+                        res.status(404).json({
+                            'message': err
+                        });
+                    });
+
+                    // once all the files have been uploaded, send a response to the client
+                    form.on('end', function() {
+                        res.status(200).json({
+                            'message': 'Settings has been updated successfully'
+                        });
+                    });
+
+                    // parse the incoming request containing the form data
+                    form.parse(req);
+
+                }else{
+                    res.json({
+                        "status":404,
+                        "message":"Something went wrong"
+                    })
+                }
+            });
+
+            //User Module
+
+            app.post('/user',passport.authenticate('jwt',{session:false}),function(req,res){
+                cli.blue("Its Work users");
+                if(req.user.length > 0){
+                    queries.getAllUser(req,function(error,rows){
+                        res.json({
+                            'status':200,
+                            'message':'Success',
+                            'result':rows
+                        })
+                    });
+                }else{
+                    res.json({
+                        "status":404,
+                        "message":"Something went wrong"
+                    })
+                }
+            });
+
+            app.post('/useroperation',passport.authenticate('jwt',{session:false}),function(req,res){
+                if(!validator.isEmpty(req.body.id) && !validator.isEmpty(req.body.vOperation)){
+                    if(req.user.length > 0 ){
+                        if(req.body.vOperation == 'view'){
+                            cli.blue("view call");
+                            queries.getUserById({'id':req.body.id},function(error,rows){
+                                if(rows.length > 0){
+                                    res.json({
+                                        'status':200,
+                                        'message':'success',
+                                        'result':rows
+                                    });
+                                }else{
+                                    res.json({
+                                        'status':404,
+                                        'message':'User Not Found',
+                                    })
+                                }
+                            });
+                        }else if(req.body.vOperation == 'edit'){
+
+                        }else if(req.body.vOperation == 'delete'){
+                            queries.deleteUserById({'id':req.body.id},function(error,rows){
+                                if(error) throw error;
+                                res.json({
+                                    'status':200,
+                                    'message':'User deleted successfully.'
+                                });
+                            });
+                        }
+                    }else{
+                        res.json({
+                            "status":404,
+                            "message":"Something webnt wrong"
+                        })
+                    }
+
+                }else{
+
+                    res.json({
+                        "status":404,
+                        "message":"Please fill all required value"
+                    })
+
+                }
+
+            });
+
+    }
