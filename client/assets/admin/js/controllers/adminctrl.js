@@ -17,7 +17,7 @@ angular.module('main').controller('AdminCtrl',function ($scope,$http,$localForag
 		}).then(function(res){
 			if(res.data.status == 200){
 				$localForage.clear('UserInfo').then(function(res){
-					$state.go('login');
+					$state.transitionTo('login');
 				});
 			}
 		});

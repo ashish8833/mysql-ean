@@ -469,7 +469,7 @@ MetronicApp.config(['$stateProvider', '$urlRouterProvider', '$httpProvider', fun
         })
         .state('users', {
             url: "/users.html",
-            templateUrl: "../templates/admin/users.html",
+            templateUrl: "../templates/admin/list_users.html",
             data: {
                 pageTitle: 'Manage Users',
                 pageSubTitle: 'User listings and statistics'

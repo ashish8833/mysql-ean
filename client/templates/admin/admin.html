@@ -61,38 +61,38 @@
    <div class="page-sidebar-wrapper">
       <div class="page-sidebar navbar-collapse collapse">
          <ul class="page-sidebar-menu " data-keep-expanded="false" data-auto-scroll="true" data-slide-speed="200" ng-class="{'page-sidebar-menu-closed': settings.layout.pageSidebarClosed}">
-            <li class="start active ">
+            <li class="start" ui-sref-active="{'active' : $state.current.name == 'admin.dashboard'">
                <a ui-sref="admin.dashboard">
                <i class="icon-home"></i>
                <span class="title">Dashboard</span>
                </a>
             </li>
 
-            <li>
+            <li ui-sref-active="{'active' : $state.current.name == 'admin.cpass' || $state.current.name == 'admin.sitesetting'}">
                <a href="javascript:;">
                <i class="icon-settings"></i>
                <span class="title">General Settings</span>
                <span class="arrow "></span>
                </a>
                <ul class="sub-menu">
-                  <li>
-                     <a href="javascrip:;" ui-sref="admin.sitesetting">
+                  <li ui-sref-active="{'active' : $state.current.name == 'admin.sitesetting'}">
+                     <a href="javascrip:;"  ui-sref="admin.sitesetting">
                      <i class="icon-settings"></i>Site Settings</a>
                   </li>
-                  <li>
+                  <li ui-sref-active="{'active' : $state.current.name == 'admin.cpass'}">
                      <a href="javascript:;" ui-sref="admin.cpass">
                      <i class="icon-settings"></i>
                         Change Password</a>
                   </li>
                   <li>
-                     <a href="javascrip:;" ui-sref="admin.userdev">
+                     <a href="javascrip:;" ui-sref="admin.setting.userdev">
                      <i class="icon-settings"></i>
                      Manage Profile</a>
                   </li>
                </ul>
             </li>
 
-            <li>
+            <li ui-sref-active="{'active' : $state.current.name == 'admin.users'}">
                <a ui-sref="admin.users" href="javascrit:;">
                   <i class="icon-user"></i>
                   <span class="title">Manage Users</span>
@@ -100,7 +100,7 @@
             </li>
 
             <li>
-               <a ui-sref="admin.underdev" href="javascrit:;">
+               <a ui-sref="admin.question" href="javascrit:;">
                   <i class="fa fa-question-circle"></i>
                   <span class="title">Manage Questions</span>
                </a>

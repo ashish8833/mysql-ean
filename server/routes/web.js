@@ -8,6 +8,20 @@ var passport = require("passport");
 var randomstring = require("randomstring");
 var JWTStrategy = require('../../config/passport-auth'); //passport-jwt Authorization Strategy
 
+function checkUser(vEmail,cb){
+    queries.checkEmail({'vEmail':vEmail},cb);
+}
+
+// function getSorting(req) {
+//     var i = 0;
+//     var vSort = [];
+//     for (i = 0; i < req.order.length; i++) {
+//         vSort.push(req.columns[req.order[i].column].name + ' ' + req.order[i].dir);
+//     }
+//     return vSort.toString();
+// }
+
+
 passport.use(JWTStrategy);
 module.exports = function (app,cli,mail) {
 	cli.green("Connection database");
@@ -165,7 +179,7 @@ module.exports = function (app,cli,mail) {
                 }else{
                     res.json({
                         "status":404,
-                        "message":"Something went wrong"
+                        "message":'User not active'
                     })
                 }
             });
@@ -218,7 +232,7 @@ module.exports = function (app,cli,mail) {
                 }else{
                     res.json({
                         "status":404,
-                        "message":"Something went wrong"
+                        "message":'User not active'
                     })
                 }
             });
@@ -243,8 +257,70 @@ module.exports = function (app,cli,mail) {
                 }
             });
 
+            app.post('/useradd',passport.authenticate('jwt',{session:false}),function (req,res) {
+                if(req.user.length > 0){
+                    cli.blue("Check Email");
+                    cli.blue(validator.isEmail(req.body.vEmail));
+                    if(!validator.isEmpty(req.body.vFullName) && validator.isEmail(req.body.vEmail)){
+                        checkUser(req.body.vEmail,function(error,isActive){
+                            if(error) throw error;
+                            if(isActive.length > 0){
+                                res.json({
+                                    "status":404,
+                                    "message":"User already available"
+                                });
+                            }else{
+                                var vPassword = randomstring.generate(6);
+                                queries.addUser({"vFullName":req.body.vFullName,"vUserName":req.body.vEmail,"vEmail":req.body.vEmail,"vPassword":vPassword},function(err,rows){
+                                    if(err) throw err;
+                                    if(rows.affectedRows > 0){
+                                        //Send Mail
+                                        var mailOptions = {
+                                            from: '"Pemdas" <info@pemdas.com>', // sender address
+                                            to: req.body.vEmail, // list of receivers
+                                            subject: 'Hello '+ req.body.vFullName, // Subject line
+                                            text: 'One time password  : ' + vPassword // plaintext body
+                                        };
+                                        mail.sendMail(mailOptions,function(err,info){
+                                            if(err){
+                                                cli.red("Mail not send");
+                                                console.log(err);
+                                            }
+                                        });
+                                        //Send mail end
+
+
+                                        res.json({
+                                            "status":200,
+                                            "message":"User Insert Successfully."
+                                        });
+                                    }else{
+                                        res.json({
+                                            "status":400,
+                                            "message":"Something went wrong"
+                                        });
+                                    }
+                                });
+                            }
+                        });
+                    }else{
+                        res.json({
+                            "status":404,
+                            "message":"Please fill all required value"
+                        });
+                    }
+                }else{
+                    res.json({
+                        "status":404,
+                        "message":'User not active'
+                    })
+                }
+
+            });
             app.post('/useroperation',passport.authenticate('jwt',{session:false}),function(req,res){
                 if(!validator.isEmpty(req.body.id) && !validator.isEmpty(req.body.vOperation)){
+                    cli.blue("inside");
+                    console.log("Inside");
                     if(req.user.length > 0 ){
                         if(req.body.vOperation == 'view'){
                             cli.blue("view call");
@@ -263,7 +339,21 @@ module.exports = function (app,cli,mail) {
                                 }
                             });
                         }else if(req.body.vOperation == 'edit'){
-
+                            if(!validator.isEmpty(req.body.vFullName)){
+                                cli.green("Edit call");
+                                cli.red(req.body.id);
+                                queries.updateUserById({'id':req.body.id,'vFullName':req.body.vFullName},function(err,rows){
+                                    if(err) throw err;
+                                    res.status(200).json({
+                                        'message':'User update successfully'
+                                    });
+                                });
+                            }else{
+                                res.json({
+                                    "status":404,
+                                    "message":"Please fill all required value"
+                                });
+                            }
                         }else if(req.body.vOperation == 'delete'){
                             queries.deleteUserById({'id':req.body.id},function(error,rows){
                                 if(error) throw error;
@@ -272,6 +362,26 @@ module.exports = function (app,cli,mail) {
                                     'message':'User deleted successfully.'
                                 });
                             });
+                        }else if(req.body.vOperation == 'status'){
+                            if(!validator.isEmpty(req.body.eStatus+'')){
+                                queries.changeUserStatusById({'id':req.body.id,'status':req.body.eStatus},function(error,rows){
+                                    if(error) throw error;
+                                    res.json({
+                                        'status':200,
+                                        'message':'User status change successfully'
+                                    });
+                                });
+                            }else{
+                                res.json({
+                                    "status":404,
+                                    "message":"Please fill all required value"
+                                })
+                            }
+                        } else{
+                            res.json({
+                                "status":404,
+                                "message":"Please fill all required value"
+                            })
                         }
                     }else{
                         res.json({
@@ -290,5 +400,157 @@ module.exports = function (app,cli,mail) {
                 }
 
             });
+
+            // User Module End
+
+
+            //Question Module Start
+            /**
+             * Getting List of Questions
+             */
+            app.post('/question',passport.authenticate('jwt',{session:false}),function(req,res){
+                cli.blue("Its Work users");
+                if(req.user.length > 0){
+                    queries.listQuestion(req,function(error,rows){
+                        res.json({
+                            'status':200,
+                            'message':'Success',
+                            'result':rows
+                        })
+                    });
+                }else{
+                    res.json({
+                        "status":404,
+                        "message":"Something went wrong"
+                    })
+                }
+            });
+            /**
+             *  Question Operation View,Status,Delete
+             */
+            app.post('/questionoperation',passport.authenticate('jwt',{session:false}),function(req,res){
+                cli.blue("Its Work users");
+                if(req.user.length > 0){
+                    if(!validator.isEmpty(req.body.vOperation) && !validator.isEmpty(req.body.iQuestionId)){
+                        if(req.body.vOperation == 'status'){
+                            queries.statusQuestion({"iQuestionId":req.body.iQuestionId,"eStatus":req.body.eStatus},function(err,rows){
+                                if(err) throw err;
+                                if(rows.affectedRows > 0){
+                                    res.json({
+                                        'status':200,
+                                        'message':'Question status change successfully'
+                                    });
+                                }else{
+                                    res.json({
+                                        "status":404,
+                                        "message":"Something went wrong"
+                                    })
+                                }
+                            });
+                        }else if(req.body.vOperation == 'view'){
+                            queries.viewQuestion({"iQuestionId":req.body.iQuestionId},function(err,rows){
+                                if(err) throw  err;
+                                if(rows.length > 0){
+                                    res.json({
+                                        'status':200,
+                                        'message':'success',
+                                        'result':rows
+                                    })
+                                }else{
+                                    res.json({
+                                        "status":404,
+                                        "message":"Something went wrong"
+                                    });
+                                }
+                            });
+                        }else if(req.body.vOperation == 'delete'){
+                            queries.deleteQuestion({"iQuestionId":req.body.iQuestionId},function(err,rows){
+                                if(err) throw err;
+                                if(rows.affectedRows > 0){
+                                    res.json({
+                                        'status':200,
+                                        'message':'Question deleted successfully.'
+                                    });
+                                }else{
+                                    res.json({
+                                        "status":404,
+                                        "message":"Something went wrong"
+                                    });
+                                }
+                            });
+                        }else{
+                            res.json({
+                                "status":404,
+                                "message":"Please fill all required value"
+                            });
+                        }
+
+                    }else{
+                        res.json({
+                            "status":404,
+                            "message":"Please fill all required value"
+                        })
+                    }
+                }else{
+                    res.json({
+                        "status":404,
+                        "message":"Something went wrong"
+                    })
+                }
+            });
+            /**
+             *  Question Operation View,Status,Delete Emd
+             */
+
+            /**
+             *  Data Table With Server Side Rendering Start
+             */
+
+            app.post('/serverData',function(req,res){
+
+                var obj = {
+                    'vUserName': req.body.vUserName,
+                    'vEmail': req.body.vEmail,
+                };
+                queries.sr_user_count(obj, function(err, record) {
+                    var iTotalRecords = parseInt(record[0].iTotalRecords);
+                    var iDisplayLength = parseInt(req.body.length);
+                    iDisplayLength = iDisplayLength < 0 ? iTotalRecords : iDisplayLength;
+                    var iDisplayStart = parseInt(req.body.start);
+                    var end = iDisplayStart + iDisplayLength;
+                    end = end > iTotalRecords ? iTotalRecords : end;
+                    var obj = {
+                        'limit': end,
+                        'offset': iDisplayStart,
+                        'vUserName': req.body.vUserName,
+                        'vEmail': req.body.vEmail,
+                    };
+                queries.sr_user_select(obj, function(err, users) {
+                        if (err) return err;
+                        var i = 0;
+                        var records = {};
+                        records['draw'] = req.body.draw;
+                        records['recordsTotal'] = iTotalRecords;
+                        records['recordsFiltered'] = iTotalRecords;
+                        records['data'] = [];
+                        for (var key in users) {
+                            var record = [];
+                            records['data'][i] = {"iUserId":users[i].iUserId,"vUserName":users[i].vUserName,"vEmail":users[i].vEmail};
+                            i++;
+                        }
+                        res.json(records);
+                    });
+                });
+
+
+
+            });
+
+            /**
+             *  Data Table With Server Side Rendering End
+             */
+
+
+
 
     }

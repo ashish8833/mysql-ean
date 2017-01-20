@@ -6,8 +6,8 @@ var app = angular.module('main',['ui.router',
     'LocalForageModule',
 	'toastr',
     'datatables',
-    'ngResource'
-
+    'ngResource',
+    'frapontillo.bootstrap-switch'
 ]);
 app.config(function($stateProvider,$urlRouterProvider,$locationProvider,$ocLazyLoadProvider,$localForageProvider,toastrConfig){
 	$ocLazyLoadProvider.config({
@@ -106,8 +106,8 @@ app.config(function($stateProvider,$urlRouterProvider,$locationProvider,$ocLazyL
     })
     .state('admin.users',{
             url:'/users',
-            templateUrl:'templates/admin/users.html',
-            data :{ pageTitle:'Change Password',bodyClass:'page-header-fixed page-sidebar-closed-hide-logo page-sidebar-closed-hide-logo' },
+            templateUrl:'templates/admin/list_users.html',
+            data :{ pageTitle:'Users list',bodyClass:'page-header-fixed page-sidebar-closed-hide-logo page-sidebar-closed-hide-logo' },
             controller:'UsersCtrl',
             resolve:{
                 depends:['$ocLazyLoad',function($ocLazyLoad){
@@ -117,9 +117,7 @@ app.config(function($stateProvider,$urlRouterProvider,$locationProvider,$ocLazyL
                         insertBefore:'#ng_load_plugins_before',
                         files:[
                             'assets/admin/js/controllers/usersctrl.js',
-                            //This css for datatable with bootstrap class name table table-striped table-bordered
-                            // 'node_modules/datatables/media/css/jquery.dataTables.min.css'
-                           ]
+                            ]
                     });
                 }]
             }
@@ -127,7 +125,7 @@ app.config(function($stateProvider,$urlRouterProvider,$locationProvider,$ocLazyL
     .state('admin.userdetails',{
             url:'/userdetails/:id',
             templateUrl:'templates/admin/userdetails.html',
-            data :{ pageTitle:'Change Password',bodyClass:'page-header-fixed page-sidebar-closed-hide-logo page-sidebar-closed-hide-logo' },
+            data :{ pageTitle:'User details',bodyClass:'page-header-fixed page-sidebar-closed-hide-logo page-sidebar-closed-hide-logo' },
             controller:'UserDetailsCtrl',
             resolve:{
                 depends:['$ocLazyLoad',function($ocLazyLoad){
@@ -139,6 +137,71 @@ app.config(function($stateProvider,$urlRouterProvider,$locationProvider,$ocLazyL
                             'assets/admin/pages/css/profile.css',
                             'assets/admin/js/controllers/userdetailsctrl.js',
 
+                        ]
+                    });
+                }]
+            }
+    })
+    .state('admin.userform',{
+            url:'/userform',
+            params:{
+                id:null,
+                action:null,
+                data:null
+            },
+            templateUrl:'templates/admin/form_user.html',
+            data :{ pageTitle:'User details',bodyClass:'page-header-fixed page-sidebar-closed-hide-logo page-sidebar-closed-hide-logo'},
+            controller:'UserFormCtrl',
+            resolve:{
+                depends:['$ocLazyLoad',function($ocLazyLoad){
+                    console.log("Lazy Load Call");
+                    return $ocLazyLoad.load({
+                        name:'main',
+                        insertBefore:'#ng_load_plugins_before',
+                        files:[
+                            'assets/admin/js/controllers/userformctrl.js',
+                        ]
+                    });
+                }]
+            }
+    })
+    .state('admin.question',{
+            url:'/question',
+            templateUrl:'templates/admin/list_question.html',
+            data :{ pageTitle:'Question List',bodyClass:'page-header-fixed page-sidebar-closed-hide-logo page-sidebar-closed-hide-logo'},
+            controller:'QuestionCtrl',
+            resolve:{
+                depends:['$ocLazyLoad',function($ocLazyLoad){
+                    console.log("Lazy Load Call");
+                    return $ocLazyLoad.load({
+                        name:'main',
+                        insertBefore:'#ng_load_plugins_before',
+                        files:[
+                            'assets/admin/js/controllers/questionctrl.js',
+                        ]
+                    });
+                }]
+            }
+    })
+    .state('admin.questiondetails',{
+            url:'/questiondetails',
+            params:{
+                id:null,
+                action:null,
+                data:null
+            },
+            templateUrl:'templates/admin/view_question.html',
+            data :{ pageTitle:'Question List',bodyClass:'page-header-fixed page-sidebar-closed-hide-logo page-sidebar-closed-hide-logo'},
+            controller:'QuestionDetailsCtrl',
+            resolve:{
+                depends:['$ocLazyLoad',function($ocLazyLoad){
+                    console.log("Lazy Load Call");
+                    return $ocLazyLoad.load({
+                        name:'main',
+                        insertBefore:'#ng_load_plugins_before',
+                        files:[
+                            'assets/admin/js/controllers/questiondetailsctrl.js',
+                            'assets/admin/global/plugins/jquery.pulsate.min.js'
                         ]
                     });
                 }]
@@ -177,29 +240,29 @@ app.run(function($state,$rootScope,$http,$localForage){
                     if(data.status === 200){
 						var notAllowed = ['login','admin'];
                         if(notAllowed.indexOf(currentState) > -1){
-                            $state.go('admin.dashboard');
+                            $state.transitionTo('admin.dashboard');
                         }
                         $http.defaults.headers.common.Authorization = 'JWT '+data.token;
 					}
 					else{
-                    	$state.go("login");
+                    	$state.transitionTo("login");
 					}
                 }else{
-                    $state.go('login');
+                    $state.transitionTo('login');
                 }
 			});
 		}
-
-
-
-	});
+    });
 	$rootScope.$state = $state;
 	console.log("hello");
 
 })
 
-app.controller('GlobalCtrl',function ($scope) {
+app.controller('GlobalCtrl',function ($scope,$rootScope) {
 	console.log("Global Controller call");
+    $rootScope.hideLoad = true;
+    console.log("asdfasdfasdfasfasdf");
+    console.log($scope.hideLoad);
 });
 app.controller('AppCtrl', function ($scope) {
 	console.log("App Controller call");
@@ -210,7 +273,7 @@ app.directive('ngSpinnerBar', ['$rootScope',
         return {
             link: function (scope, element, attrs) {
                 // by defult hide the spinner bar
-                element.addClass('hide');
+                // element.addClass('hide');
 
                 // display the spinner bar whenever the route changes(the content part started loading)
                 $rootScope.$on('$stateChangeStart', function() {
@@ -244,19 +307,20 @@ app.directive('ngSpinnerBar', ['$rootScope',
                 // so when they all done the spinner will be removed
                 scope.counterNetwork = 0;
 				$rootScope.$on('$stateNetworkRequestStarted', function () {
+				    console.log("networdk request start");
                     scope.counterNetwork++;
                     element.removeClass('hide'); // show spinner bar
                     //  $('body').addClass('page-on-load');
                 });
 
                 $rootScope.$on('$stateNetworkRequestEnded', function () {
+                    console.log("networdk request close");
                     scope.counterNetwork--;
                     if (scope.counterNetwork <= 0) {
                         scope.counterNetwork = 0;
                         element.addClass('hide'); // show spinner bar
                         //  $('body').removeClass('page-on-load'); // remove page loading indicator
                     }
-
                 });
 
             }
@@ -281,7 +345,7 @@ app.directive('bootstrapSwitch', [
                 });
 
                 scope.$watch(attrs.ngModel, function(newValue, oldValue) {
-                    if (newValue) {
+                    if (newValue){
                         console.log("True");
                         element.bootstrapSwitch('state', true, true);
                     } else {

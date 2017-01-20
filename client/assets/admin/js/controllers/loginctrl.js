@@ -14,7 +14,7 @@ angular.module('main').controller('LoginCtrl',function ($scope,$http,$localForag
                     $localForage.getItem('UserInfo').then(function(data){
                         console.log("Local Storage Call");
                         console.log(data);
-                        $state.go('admin.dashboard');
+                        $state.transitionTo('admin.dashboard');
                     });
                 });
             }else{
