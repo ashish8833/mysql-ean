@@ -9,8 +9,13 @@ var app = angular.module('main',['ui.router',
     'ngResource',
     'frapontillo.bootstrap-switch'
 ]);
-app.config(function($stateProvider,$urlRouterProvider,$locationProvider,$ocLazyLoadProvider,$localForageProvider,toastrConfig){
-	$ocLazyLoadProvider.config({
+app.config(function($stateProvider,$urlRouterProvider,$locationProvider,$ocLazyLoadProvider,$localForageProvider,toastrConfig,$qProvider){
+    /**
+     * $qProvider add because in angularjs -v 1.5.9 and ui-router -v 0.2.18 Transmission error when state change
+     * i user some whenre $state.go to $state.transitionTo
+     */
+    $qProvider.errorOnUnhandledRejections(false);
+    $ocLazyLoadProvider.config({
 		cssFilesInsertBefore:'ng_load_plugins_before'
 	});
 	$urlRouterProvider.otherwise('/admin/dashboard');
