@@ -25,12 +25,15 @@ angular.module('main').controller('UsersCtrl',function ($scope,$rootScope,$resou
         })
     }
     $scope.userOperation = function(iUserId,OperationType){
+        console.log("Operation Type");
+        console.log(OperationType);
         var postData = {
             'id':iUserId,
             'vOperation':OperationType
         }
         if(OperationType == 'view'){
-            $state.go('admin.userdetails',{'id':iUserId});
+            // $state.go('admin.userdetails',{'id':iUserId});
+
         }else if(OperationType == 'delete'){
             $http({
                 method:'post',
@@ -70,9 +73,11 @@ angular.module('main').controller('UsersCtrl',function ($scope,$rootScope,$resou
 
     $scope.dtColumns = [
         //here We will add .withOption('name','column_name') for send column name to the server
+        //here we will add .newColumn('column_name','Title for column name')
         DTColumnBuilder.newColumn("iUserId", "User ID").withOption('name', 'iUserId'),
         DTColumnBuilder.newColumn("vUserName", "User Name").withOption('name', 'vUserName'),
         DTColumnBuilder.newColumn("vEmail", "Email").withOption('name', 'vEmail'),
+        DTColumnBuilder.newColumn("eStatus",'Status').withOption('name','eStatus')
     ];
 
     $scope.dtOptions = DTOptionsBuilder.newOptions().withOption('ajax', {
@@ -84,6 +89,8 @@ angular.module('main').controller('UsersCtrl',function ($scope,$rootScope,$resou
       .withOption('serverSide', true) // for server side processing
       .withPaginationType('full_numbers') // for get full pagination options // first / last / prev / next and page numbers
       .withDisplayLength(10) // Page size
-      .withOption('aaSorting',[0,'asc']);
+      .withOption('aaSorting',[0,'desc']);
+
+
 
 });

@@ -8,18 +8,27 @@ var passport = require("passport");
 var randomstring = require("randomstring");
 var JWTStrategy = require('../../config/passport-auth'); //passport-jwt Authorization Strategy
 
+/**
+ * Check Email Available or not
+ * @param vEmail
+ * @param cb
+ */
 function checkUser(vEmail,cb){
     queries.checkEmail({'vEmail':vEmail},cb);
 }
-
-// function getSorting(req) {
-//     var i = 0;
-//     var vSort = [];
-//     for (i = 0; i < req.order.length; i++) {
-//         vSort.push(req.columns[req.order[i].column].name + ' ' + req.order[i].dir);
-//     }
-//     return vSort.toString();
-// }
+/**
+ * Magic happen for data table sorting function
+ * @param req
+ * @returns {*}
+ */
+function getSorting(req) {
+    var i = 0;
+    var vSort = [];
+    for (i = 0; i < req.order.length; i++) {
+        vSort.push(req.columns[req.order[i].column].name + ' ' + req.order[i].dir);
+    }
+    return vSort.toString();
+}
 
 
 passport.use(JWTStrategy);
@@ -502,15 +511,14 @@ module.exports = function (app,cli,mail) {
              *  Question Operation View,Status,Delete Emd
              */
 
+
             /**
              *  Data Table With Server Side Rendering Start
              */
-
             app.post('/serverData',function(req,res){
-
                 var obj = {
-                    'vUserName': req.body.vUserName,
-                    'vEmail': req.body.vEmail,
+                    'vUserName': req.body.search.value, //Search Apply for default search text box
+                    'vEmail': req.body.search.value //Search Apply for default search text box
                 };
                 queries.sr_user_count(obj, function(err, record) {
                     var iTotalRecords = parseInt(record[0].iTotalRecords);
@@ -522,8 +530,9 @@ module.exports = function (app,cli,mail) {
                     var obj = {
                         'limit': end,
                         'offset': iDisplayStart,
-                        'vUserName': req.body.vUserName,
-                        'vEmail': req.body.vEmail,
+                        'vUserName': req.body.search.value,
+                        'vEmail': req.body.search.value,
+                        'sort':getSorting(req.body)
                     };
                 queries.sr_user_select(obj, function(err, users) {
                         if (err) return err;
@@ -535,17 +544,15 @@ module.exports = function (app,cli,mail) {
                         records['data'] = [];
                         for (var key in users) {
                             var record = [];
-                            records['data'][i] = {"iUserId":users[i].iUserId,"vUserName":users[i].vUserName,"vEmail":users[i].vEmail};
+                            var operation = '<button ng-click="userOperation('+users[i].iUserId+',view)" title="View"  class="btn btn-success btn-xs">View</button>';
+                            records['data'][i] = {"iUserId":users[i].iUserId,"vUserName":users[i].vUserName,"vEmail":users[i].vEmail,"eStatus":operation};
                             i++;
                         }
                         res.json(records);
                     });
                 });
 
-
-
             });
-
             /**
              *  Data Table With Server Side Rendering End
              */

@@ -90,7 +90,10 @@ var Users = {
     sr_user_select: function(body, cb){
         var sWhere = "";
         var aWhere = ['user','d'];
-        var sort = 'vUserName ASC';
+        var sort = "";
+        /**
+         * Column Search Depending on Table
+         */
         if(typeof body.vUserName != 'undefined' && body.vUserName != "")
         {
             sWhere += ' AND vUserName LIKE ?';
@@ -101,7 +104,9 @@ var Users = {
             sWhere += ' AND vEmail LIKE ?';
             aWhere.push('%'+body.vEmail+'%');
         }
-        db.query("SELECT iUserId, vUserName, vEmail FROM tbl_users WHERE vUserType = ? AND eStatus != ? "+sWhere+" LIMIT "+body.offset+", "+body.limit,aWhere,cb);
+        if(typeof body.sort != 'undefined' && body.sort != "") {sort = body.sort};
+
+        db.query("SELECT iUserId, vUserName, vEmail ,eStatus FROM tbl_users WHERE vUserType = ? AND eStatus != ? "+sWhere+" ORDER BY "+sort+" LIMIT "+body.offset+", "+body.limit,aWhere,cb);
     }
 };
 module.exports = Users;
