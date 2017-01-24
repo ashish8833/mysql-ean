@@ -1,7 +1,8 @@
-angular.module('main').controller('UsersCtrl',function ($scope,$rootScope,$resource,$http,$state,toastr,DTOptionsBuilder, DTColumnBuilder) {
+angular.module('main').controller('UsersCtrl',function ($scope,$rootScope,$resource,$http,$state,toastr,DTOptionsBuilder, DTColumnBuilder,$compile) {
     console.log("Users controller call");
-
-    loadList();
+    //Status Store for every user
+    $scope.userStatus = [];
+    //Status change event fire
     $scope.onUserStatusChange = function(status,id){
         $rootScope.hideLoad = false;  //Loading Stop For Network Operation Start
         $http({
@@ -24,16 +25,18 @@ angular.module('main').controller('UsersCtrl',function ($scope,$rootScope,$resou
             console.log(err);
         })
     }
+
+    //User Operation event fire
     $scope.userOperation = function(iUserId,OperationType){
         console.log("Operation Type");
+        console.log(iUserId);
         console.log(OperationType);
         var postData = {
             'id':iUserId,
             'vOperation':OperationType
         }
         if(OperationType == 'view'){
-            // $state.go('admin.userdetails',{'id':iUserId});
-
+            $state.go('admin.userdetails',{'id':iUserId});
         }else if(OperationType == 'delete'){
             $http({
                 method:'post',
@@ -54,43 +57,49 @@ angular.module('main').controller('UsersCtrl',function ($scope,$rootScope,$resou
         }
 
     }
-    function loadList() {
-        $rootScope.hideLoad = false;  //Loading Stop For Network Operation Start
-        $http.post('/user').then(function(response) {
-            console.log("Success");
-            console.log(response);
-            $scope.users = response.data.result;
-            $rootScope.hideLoad = true; //Loading Stop For Network Operation Success
-        },function(err){
-            console.log("Something wrong in list");
-            $rootScope.hideLoad = true; //Loading Stop For Network Operation Error
-        });
-    }
+
+
 
     /**
-     * Data Table Integration
+     * BEGIN Data Table Integration
      */
-
     $scope.dtColumns = [
         //here We will add .withOption('name','column_name') for send column name to the server
         //here we will add .newColumn('column_name','Title for column name')
         DTColumnBuilder.newColumn("iUserId", "User ID").withOption('name', 'iUserId'),
         DTColumnBuilder.newColumn("vUserName", "User Name").withOption('name', 'vUserName'),
         DTColumnBuilder.newColumn("vEmail", "Email").withOption('name', 'vEmail'),
-        DTColumnBuilder.newColumn("eStatus",'Status').withOption('name','eStatus')
+        DTColumnBuilder.newColumn(null).withTitle('Status').notSortable().renderWith(actionsHtml),
+        // DTColumnBuilder.newColumn("Status",'Status').withOption('name','Status').notSortable(),
+        DTColumnBuilder.newColumn("vOperation",'Operation').withOption('name','vOperation').notSortable()
     ];
 
     $scope.dtOptions = DTOptionsBuilder.newOptions().withOption('ajax', {
         dataSrc: "data",
-        url: "/serverData",
+        url: "/user_list",
         type: 'POST',
-        dataType:'json'
+        dataType:'json',
+        data:function(d){
+            $scope.userStatus = [];
+            console.log("data call");
+        }
     }).withOption('processing', true) //for show progress bar
       .withOption('serverSide', true) // for server side processing
       .withPaginationType('full_numbers') // for get full pagination options // first / last / prev / next and page numbers
       .withDisplayLength(10) // Page size
-      .withOption('aaSorting',[0,'desc']);
+      .withOption('aaSorting',[0,'desc'])
+      .withOption('createdRow',function(nRow, aData, iDisplayIndex, iDisplayIndexFull){
+         $compile(nRow)($scope);
+      });
 
+    function actionsHtml(data, type, full, meta) {
+        $scope.userStatus[data.iUserId] = data.eStatus;
+        var temp = '<input bs-switch ng-model="userStatus['+data.iUserId+']" class="switch-small" type="checkbox" ng-true-value="&apos;y&apos;" ng-false-value="&apos;n&apos;" ng-change="onUserStatusChange('+data.iUserId+',userStatus['+data.iUserId+'])">';
+        return temp;
+    }
 
+    /**
+     * END Data Table Integration
+     */
 
 });

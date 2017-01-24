@@ -93,6 +93,14 @@
                                             {{question[0].dUpdatedDate}}
                                         </td>
                                     </tr>
+                                    <tr>
+                                        <td>
+                                            Status
+                                        </td>
+                                        <td>
+                                           <span class="label" ng-class="(question[0].eStatus == 'y') ? 'label-success' : 'label-warning'">{{(question[0].eStatus == 'y') ? "Active":"In Active"}}</span>
+                                        </td>
+                                    </tr>
                                 </table>
                             </div>
                         </div>

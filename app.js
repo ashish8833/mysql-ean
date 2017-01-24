@@ -52,11 +52,15 @@ app.set('superSecret', 'premdasapp');
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
+//Game API
+require("./server/routes/game")(app,cli,mail);
 app.use(express.static(path.join(__dirname, 'client')));
 app.use(express.static(path.join(__dirname, 'node_modules')));
-//Routing
+
+//Web API
 require("./server/routes/web")(app,cli,mail);
-//End Routing
+
+
 //Running Code for Application Socket
 // app.io.on('connection', function(socket){
 //     console.log(socket);

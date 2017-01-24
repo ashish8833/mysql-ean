@@ -1,9 +1,10 @@
-angular.module('main').controller('QuestionCtrl',function ($scope,$http,$rootScope,toastr,$state) {
+angular.module('main').controller('QuestionCtrl',function ($scope,$http,$rootScope,toastr,$state,DTOptionsBuilder, DTColumnBuilder,$compile) {
     console.log("Question controller call");
+    $scope.questionStatus = [];
     /**
      * Generate Question List
      */
-    listQuestion();
+    //listQuestion();
     function listQuestion(){
         $rootScope.hideLoad = false;  //Loading Stop For Network Operation Start
         $http.post('/question').then(function(response) {
@@ -17,7 +18,40 @@ angular.module('main').controller('QuestionCtrl',function ($scope,$http,$rootSco
         });
     }
 
+    $scope.dtColumns = [
+        DTColumnBuilder.newColumn("iQuestionId", "Question Id").withOption('name', 'iQuestionId'),
+        DTColumnBuilder.newColumn("vModeName", "Difficulty level").withOption('name', 'vModeName'),
+        DTColumnBuilder.newColumn("eType", "Type").withOption('name', 'eType'),
+        DTColumnBuilder.newColumn("vQuestion", "Question").withOption('name', 'vQuestion'),
+        DTColumnBuilder.newColumn("vAnswer", "Answer").withOption('name', 'vAnswer'),
+        DTColumnBuilder.newColumn("vAnswer", "Answer").withOption('name', 'vAnswer'),
+        DTColumnBuilder.newColumn(null).withTitle('Status').notSortable().renderWith(actionsHtml),
+        // DTColumnBuilder.newColumn("Status",'Status').withOption('name','Status').notSortable(),
+        DTColumnBuilder.newColumn("operation",'Operation').withOption('name','operation').notSortable()
+    ];
 
+    $scope.dtOptions = DTOptionsBuilder.newOptions().withOption('ajax',{
+        dataSrc:"data",
+        url:'/list_q',
+        type:'POST',
+        dataType:'json',
+        data:function(d){
+            $scope.questionStatus = [];
+        }
+    }).withOption('processing', true) //for show progress bar
+      .withOption('serverSide', true) // for server side processing
+      .withPaginationType('full_numbers') // for get full pagination options // first / last / prev / next and page numbers
+      .withDisplayLength(10) // Page size
+      .withOption('aaSorting',[0,'desc'])
+      .withOption('createdRow',function(nRow, aData, iDisplayIndex, iDisplayIndexFull){
+         $compile(nRow)($scope);
+      });
+
+    function actionsHtml(data, type, full, meta) {
+        $scope.questionStatus[data.iQuestionId] = data.eStatus;
+        var temp = '<input bs-switch ng-model="questionStatus['+data.iQuestionId+']" class="switch-small" type="checkbox" ng-true-value="&apos;y&apos;" ng-false-value="&apos;n&apos;" ng-change="qOperation('+data.iQuestionId+',&apos;status&apos;,questionStatus['+data.iQuestionId+'])">';
+        return temp;
+    }
     /**
      * Question Operation View,Status,Delete
      */

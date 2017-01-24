@@ -211,6 +211,29 @@ app.config(function($stateProvider,$urlRouterProvider,$locationProvider,$ocLazyL
                     });
                 }]
             }
+    })
+    .state('admin.questionform',{
+        url:'/questionform',
+        params:{
+            id:null,
+            action:null,
+            data:null
+        },
+        templateUrl:'templates/admin/form_question.html',
+        data :{ pageTitle:'Question',bodyClass:'page-header-fixed page-sidebar-closed-hide-logo page-sidebar-closed-hide-logo'},
+        controller:'QuestionFormCtrl',
+        resolve:{
+            depends:['$ocLazyLoad',function($ocLazyLoad){
+                console.log("Lazy Load Call");
+                return $ocLazyLoad.load({
+                    name:'main',
+                    insertBefore:'#ng_load_plugins_before',
+                    files:[
+                        'assets/admin/js/controllers/questionformctrl.js',
+                    ]
+                });
+            }]
+        }
     });
 	$locationProvider.hashPrefix('');
 
@@ -241,7 +264,6 @@ app.run(function($state,$rootScope,$http,$localForage){
 			console.log(currentState);
 			$localForage.getItem('UserInfo').then(function(data){
 				if(data != null){
-					console.log(data.status === 200);
                     if(data.status === 200){
 						var notAllowed = ['login','admin'];
                         if(notAllowed.indexOf(currentState) > -1){

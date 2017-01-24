@@ -147,4 +147,16 @@
       <i class="icon-arrow-up"></i>
    </div>
 </div>
+<input type="hiden" id="token" value="{{token}})">
 <!-- END FOOTER -->
+<script>
+   console.log($('#token').val());
+    $.ajaxSetup({
+        beforeSend: function (xhr)
+        {
+//            xhr.setRequestHeader("Accept","application/vvv.website+json;version=1");
+//            xhr.setRequestHeader("Authorization","JWT ";
+        }
+    });
+</script>
+

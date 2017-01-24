@@ -8,28 +8,6 @@ var passport = require("passport");
 var randomstring = require("randomstring");
 var JWTStrategy = require('../../config/passport-auth'); //passport-jwt Authorization Strategy
 
-/**
- * Check Email Available or not
- * @param vEmail
- * @param cb
- */
-function checkUser(vEmail,cb){
-    queries.checkEmail({'vEmail':vEmail},cb);
-}
-/**
- * Magic happen for data table sorting function
- * @param req
- * @returns {*}
- */
-function getSorting(req) {
-    var i = 0;
-    var vSort = [];
-    for (i = 0; i < req.order.length; i++) {
-        vSort.push(req.columns[req.order[i].column].name + ' ' + req.order[i].dir);
-    }
-    return vSort.toString();
-}
-
 
 passport.use(JWTStrategy);
 module.exports = function (app,cli,mail) {
@@ -248,23 +226,71 @@ module.exports = function (app,cli,mail) {
 
             //User Module
 
-            app.post('/user',passport.authenticate('jwt',{session:false}),function(req,res){
-                cli.blue("Its Work users");
-                if(req.user.length > 0){
-                    queries.getAllUser(req,function(error,rows){
-                        res.json({
-                            'status':200,
-                            'message':'Success',
-                            'result':rows
-                        })
+            // app.post('/user',passport.authenticate('jwt',{session:false}),function(req,res){
+            //     cli.blue("Its Work users");
+            //     if(req.user.length > 0){
+            //         queries.getAllUser(req,function(error,rows){
+            //             res.json({
+            //                 'status':200,
+            //                 'message':'Success',
+            //                 'result':rows
+            //             })
+            //         });
+            //     }else{
+            //         res.json({
+            //             "status":404,
+            //             "message":"Something went wrong"
+            //         })
+            //     }
+            // });
+
+
+            /**
+             *  Data Table With Server Side Rendering Start
+             */
+            app.post('/user_list',function(req,res){
+                var obj = {
+                    'vUserName': req.body.search.value, //Search Apply for default search text box
+                    'vEmail': req.body.search.value //Search Apply for default search text box
+                };
+                queries.ls_user_count(obj, function(err, record) {
+                    var iTotalRecords = parseInt(record[0].iTotalRecords);
+                    var iDisplayLength = parseInt(req.body.length);
+                    iDisplayLength = iDisplayLength < 0 ? iTotalRecords : iDisplayLength;
+                    var iDisplayStart = parseInt(req.body.start);
+                    var end = iDisplayStart + iDisplayLength;
+                    end = end > iTotalRecords ? iTotalRecords : end;
+                    var obj = {
+                        'limit': end,
+                        'offset': iDisplayStart,
+                        'vUserName': req.body.search.value,
+                        'vEmail': req.body.search.value,
+                        'sort':getSorting(req.body)
+                    };
+                    queries.ls_user_select(obj, function(err, users) {
+                        if (err) return err;
+                        var i = 0;
+                        var records = {};
+                        records['draw'] = req.body.draw;
+                        records['recordsTotal'] = iTotalRecords;
+                        records['recordsFiltered'] = iTotalRecords;
+                        records['data'] = [];
+                        for (var key in users) {
+                            // var status = '<input bs-switch ng-model="'+users[i].eStatus+'" value="'+users[i].eStatus+'" class="switch-small" type="checkbox" ng-true-value="&apos;y&apos;" ng-false-value="&apos;n&apos;" ng-change="onUserStatusChange(&apos;'+users[i].eStatus+'&apos;,'+users[i].iUserId+')">';
+                            var operation = '<button ng-click="userOperation('+users[i].iUserId+',&quot;view&quot;)" title="View"  class="btn btn-success btn-xs">View</button>';
+                            operation+= '<button ng-click="userOperation('+users[i].iUserId+',&quot;edit&quot;)" title="Edit"  class="btn btn-warning  btn-xs">Edit</button>';
+                            operation+= '<button ng-click="userOperation('+users[i].iUserId+',&quot;delete&quot;)" title="Delete"  class="btn btn-danger  btn-xs">Delete</button>';
+                            records['data'][i] = {"iUserId":users[i].iUserId,"vUserName":users[i].vUserName,"vEmail":users[i].vEmail,"eStatus":users[i].eStatus,"vOperation":operation};
+                            i++;
+                        }
+                        res.json(records);
                     });
-                }else{
-                    res.json({
-                        "status":404,
-                        "message":"Something went wrong"
-                    })
-                }
+                });
+
             });
+            /**
+             *  Data Table With Server Side Rendering End
+             */
 
             app.post('/useradd',passport.authenticate('jwt',{session:false}),function (req,res) {
                 if(req.user.length > 0){
@@ -434,7 +460,54 @@ module.exports = function (app,cli,mail) {
                     })
                 }
             });
-            /**
+
+            app.post('/list_q',function (req,res) {
+                var obj = {
+                    'vModeName':req.body.search.value,
+                    'eType':req.body.search.value
+                };
+                queries.ls_question_count(obj,function(err,record){
+                    if(err) throw err;
+                    var iTotalRecords = parseInt(record[0].iTotalRecords);
+                    var iDisplayLength = parseInt(req.body.length);
+                    iDisplayLength = iDisplayLength < 0 ? iTotalRecords : iDisplayLength;
+                    var iDisplayStart = parseInt(req.body.start);
+                    var end = iDisplayStart + iDisplayLength;
+                    end = end > iTotalRecords ? iTotalRecords : end;
+                    var obj = {
+                        'limit': end,
+                        'offset': iDisplayStart,
+                        'vModeName':req.body.search.value,
+                        'eType':req.body.search.value,
+                        'sort':getSorting(req.body)
+                    }
+                    queries.ls_question_select(obj,function(err,question){
+                        if(err) throw err;
+                        var i = 0;
+                        var records = {};
+                        records['draw'] = req.body.draw;
+                        records['recordsTotal'] = iTotalRecords;
+                        records['recordsFiltered'] = iTotalRecords;
+                        records['data'] = [];
+                        for(i=0;i<question.length;i++){
+                            var operation = '<button ng-click="qOperation('+question[i].iQuestionId+',&quot;view&quot;)" title="View"  class="btn btn-success btn-xs">View</button>';
+                            operation+= '<button ng-click="qOperation('+question[i].iQuestionId+',&quot;edit&quot;)" title="Edit"  class="btn btn-warning  btn-xs">Edit</button>';
+                            operation+= '<button ng-click="qOperation('+question[i].iQuestionId+',&quot;delete&quot;)" title="Delete"  class="btn btn-danger  btn-xs">Delete</button>';
+                            records['data'][i] = {"iQuestionId":question[i].iQuestionId,
+                                                  "vModeName":question[i].vModeName,
+                                                  "eType":question[i].eType,
+                                                  "vQuestion":question[i].vQuestion,
+                                                  "vAnswer":question[i].vAnswer,
+                                                  "eStatus":question[i].eStatus,
+                                                  "operation":operation
+                                                 };
+                        }
+                        res.json(records);
+                    })
+                });
+            });
+
+           /**
              *  Question Operation View,Status,Delete
              */
             app.post('/questionoperation',passport.authenticate('jwt',{session:false}),function(req,res){
@@ -512,52 +585,34 @@ module.exports = function (app,cli,mail) {
              */
 
 
-            /**
-             *  Data Table With Server Side Rendering Start
-             */
-            app.post('/serverData',function(req,res){
-                var obj = {
-                    'vUserName': req.body.search.value, //Search Apply for default search text box
-                    'vEmail': req.body.search.value //Search Apply for default search text box
-                };
-                queries.sr_user_count(obj, function(err, record) {
-                    var iTotalRecords = parseInt(record[0].iTotalRecords);
-                    var iDisplayLength = parseInt(req.body.length);
-                    iDisplayLength = iDisplayLength < 0 ? iTotalRecords : iDisplayLength;
-                    var iDisplayStart = parseInt(req.body.start);
-                    var end = iDisplayStart + iDisplayLength;
-                    end = end > iTotalRecords ? iTotalRecords : end;
-                    var obj = {
-                        'limit': end,
-                        'offset': iDisplayStart,
-                        'vUserName': req.body.search.value,
-                        'vEmail': req.body.search.value,
-                        'sort':getSorting(req.body)
-                    };
-                queries.sr_user_select(obj, function(err, users) {
-                        if (err) return err;
-                        var i = 0;
-                        var records = {};
-                        records['draw'] = req.body.draw;
-                        records['recordsTotal'] = iTotalRecords;
-                        records['recordsFiltered'] = iTotalRecords;
-                        records['data'] = [];
-                        for (var key in users) {
-                            var record = [];
-                            var operation = '<button ng-click="userOperation('+users[i].iUserId+',view)" title="View"  class="btn btn-success btn-xs">View</button>';
-                            records['data'][i] = {"iUserId":users[i].iUserId,"vUserName":users[i].vUserName,"vEmail":users[i].vEmail,"eStatus":operation};
-                            i++;
-                        }
-                        res.json(records);
-                    });
-                });
 
-            });
-            /**
-             *  Data Table With Server Side Rendering End
-             */
+
+
 
 
 
 
     }
+
+/**
+ * Magic happen for data table sorting function
+ * @param req
+ * @returns {*}
+ */
+function getSorting(req) {
+    var i = 0;
+    var vSort = [];
+    for (i = 0; i < req.order.length; i++) {
+        vSort.push(req.columns[req.order[i].column].name + ' ' + req.order[i].dir);
+    }
+    return vSort.toString();
+}
+
+/**
+ * Check Email Available or not
+ * @param vEmail
+ * @param cb
+ */
+function checkUser(vEmail,cb){
+    queries.checkEmail({'vEmail':vEmail},cb);
+}
