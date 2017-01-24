@@ -20,7 +20,6 @@ angular.module('main').controller('UserFormCtrl',function ($scope,$rootScope,$st
                 'id':$scope.user.iUserId+'',
                 'vFullName':$scope.user.vFullName,
             };
-
             $http({
                 method:'post',
                 url:'/useroperation',

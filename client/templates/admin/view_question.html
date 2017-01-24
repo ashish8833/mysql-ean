@@ -52,8 +52,11 @@
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td>
+                                        <td ng-hide="(question[0].eType == 'VSQ') ? true : false">
                                             Option:
+                                        </td>
+                                        <td ng-hide="(question[0].eType == 'VSQ') ? false : true">
+                                            Answer:
                                         </td>
                                         <td>
                                             <div id="pulsate-regular" style="padding:5px;">
@@ -61,7 +64,7 @@
                                             </div>
                                         </td>
                                     </tr>
-                                    <tr>
+                                    <tr ng-hide="(question[0].eType == 'VSQ') ? true : false">
                                         <td>
                                             Option:
                                         </td>
@@ -69,7 +72,7 @@
                                             {{question[1].vAnswer}}
                                         </td>
                                     </tr>
-                                    <tr>
+                                    <tr ng-hide="(question[0].eType == 'VSQ') ? true : false">
                                         <td>
                                             Option:
                                         </td>
@@ -77,7 +80,7 @@
                                             {{question[2].vAnswer}}
                                         </td>
                                     </tr>
-                                    <tr>
+                                    <tr ng-hide="(question[0].eType == 'VSQ') ? true : false">
                                         <td>
                                             Option:
                                         </td>

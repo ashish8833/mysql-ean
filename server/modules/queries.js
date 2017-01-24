@@ -140,7 +140,7 @@ var Users = {
         db.query("SELECT tbl_questions.*,tbl_answers.vAnswer FROM tbl_questions JOIN tbl_answers ON tbl_answers.iAnswerId = tbl_questions.iAnswerId WHERE tbl_questions.eStatus != 'd' "+sWhere+" ORDER BY "+sort+" LIMIT "+body.offset +" ,"+body.limit,aWhere,cb);
     },
     viewQuestion:function(body,cb){
-        db.query("SELECT tbl_questions.vModeName,tbl_questions.eType,tbl_questions.vQuestion,tbl_questions.dUpdatedDate,tbl_answers.vAnswer,tbl_questions.eStatus,IF(tbl_questions.iAnswerId = tbl_answers.iAnswerId,'y','n') as vRightAns FROM tbl_questions JOIN tbl_answers ON tbl_answers.iQuestionId = tbl_questions.iQuestionId WHERE tbl_questions.eStatus != 'd' AND tbl_questions.iQuestionId = ?  ORDER BY vRightAns DESC",body.iQuestionId,cb);
+        db.query("SELECT tbl_answers.iAnswerId,tbl_questions.vModeName,tbl_questions.eType,tbl_questions.vQuestion,tbl_questions.dUpdatedDate,tbl_answers.vAnswer,tbl_questions.eStatus,IF(tbl_questions.iAnswerId = tbl_answers.iAnswerId,'y','n') as vRightAns FROM tbl_questions JOIN tbl_answers ON tbl_answers.iQuestionId = tbl_questions.iQuestionId WHERE tbl_questions.eStatus != 'd' AND tbl_questions.iQuestionId = ?  ORDER BY vRightAns DESC",body.iQuestionId,cb);
     },
     statusQuestion:function(body,cb){
        db.query("UPDATE tbl_questions SET eStatus = ? WHERE iQuestionId = ?",[body.eStatus,body.iQuestionId],cb);
@@ -148,6 +148,21 @@ var Users = {
     deleteQuestion:function(body,cb){
         db.query("DELETE FROM tbl_answers WHERE iQuestionId = ?",[body.iQuestionId]);
         db.query("DELETE FROM tbl_questions WHERE iQuestionId = ?",[body.iQuestionId],cb);
+    },
+    updateAnswer:function(body,cb){
+        db.query("UPDATE tbl_answers SET vAnswer = ? ,dUpdatedDate = ?  WHERE iAnswerId= ?",[body.vAnswer,dateFormat(new Date(),"yyyy-mm-dd HH:mm:ss"),body.iAnswerId],cb);
+    },
+    updateQuestion:function(body,cb){
+        db.query("UPDATE tbl_questions SET vModeName = ? ,eType = ? ,vQuestion = ?, iAnswerId = ?, dUpdatedDate = ? WHERE iQuestionId = ?",[body.vModeName,body.eType,body.vQuestion,body.iAnswerId,dateFormat(new Date(),"yyyy-mm-dd HH:mm:ss"),body.iQuestionId],cb);
+    },
+    insertQuestion:function(body,cb){
+        db.query("INSERT INTO tbl_questions (vModeName,eType,vQuestion,iAnswerId,eStatus) VALUES (?,?,?,?,?)",[body.vModeName,body.eType,body.vQuestion,'0','n'],cb);
+    },
+    insertAnswer:function(body,cb){
+        db.query("INSERT INTO tbl_answers (iQuestionId,vAnswer) VALUES (?,?)",[body.iQuestionId,body.vAnswer],cb);
+    },
+    updateAfterInsertQuestion(body,cb){
+        db.query("UPDATE tbl_questions SET iAnswerId = ? , eStatus = ? WHERE iQuestionId= ?",[body.iAnswerId,'y',body.iQuestionId],cb);
     },
     //QUESTION MODULE END
 

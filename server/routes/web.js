@@ -584,15 +584,300 @@ module.exports = function (app,cli,mail) {
              *  Question Operation View,Status,Delete Emd
              */
 
+            /**
+             * BEGIN Question Edit Operation
+             */
+            app.post('/questionedit',passport.authenticate('jwt',{session:false}),function(req,res){
+                if(req.user.length > 0){
+                    if(!validator.isEmpty(req.body.question.eType)){
+                        if(req.body.question.eType == "MCQ"){
+                                if(!validator.isEmpty(req.body.question.iAnswerId+"") &&
+                                  !validator.isEmpty(req.body.question.vModeName) &&
+                                  !validator.isEmpty(req.body.question.iQuestionId) &&
+                                  !validator.isEmpty(req.body.question.vQuestion) &&
+                                  req.body.options.length == 4 &&
+                                  !validator.isEmpty(req.body.options[0].iAnswerId+"") &&
+                                  !validator.isEmpty(req.body.options[0].vAnswer) &&
+                                  !validator.isEmpty(req.body.options[1].iAnswerId+"") &&
+                                  !validator.isEmpty(req.body.options[1].vAnswer) &&
+                                  !validator.isEmpty(req.body.options[2].iAnswerId+"") &&
+                                  !validator.isEmpty(req.body.options[2].vAnswer) &&
+                                  !validator.isEmpty(req.body.options[3].iAnswerId+"") &&
+                                  !validator.isEmpty(req.body.options[3].vAnswer)){
+
+                                    queries.updateQuestion({
+                                                        "iAnswerId":req.body.question.iAnswerId,
+                                                        "vModeName":req.body.question.vModeName,
+                                                        "iQuestionId":req.body.question.iQuestionId,
+                                                        "vQuestion":req.body.question.vQuestion,
+                                                        "eType":"MCQ"
+                                                        },function (err,rows) {
+                                      if(err) throw err;
+                                      if(rows.affectedRows > 0){
+
+                                        for(i =0;i<req.body.options.length;i++){
+                                            queries.updateAnswer({
+                                                "iAnswerId":req.body.options[i].iAnswerId,
+                                                "vAnswer":req.body.options[i].vAnswer
+                                            },function (error, row) {
+                                                 if(error) throw error;
+                                            })
+                                        }
+                                        res.json({
+                                            "status":200,
+                                            "message":"Update Successfully."
+                                        })
+                                      }else{
+                                          res.json({
+                                              "status": 404,
+                                              "message": "Something went wrong"
+                                          });
+                                      }
+                                  });
+
+                                }else{
+                                    res.json({
+                                       "status": 404,
+                                       "message": "Please fill all required value"
+                                    });
+                               }
+                        }else{
+                             cli.blue("VSQ call");
+                            if(!validator.isEmpty(req.body.question.iAnswerId+"") &&
+                                !validator.isEmpty(req.body.question.vModeName) &&
+                                !validator.isEmpty(req.body.question.iQuestionId) &&
+                                !validator.isEmpty(req.body.question.vQuestion) &&
+                                req.body.options.length == 1 &&
+                                !validator.isEmpty(req.body.options[0].iAnswerId+"") &&
+                                !validator.isEmpty(req.body.options[0].vAnswer)){
+                                cli.blue("VSQ Done");
+
+                                queries.updateQuestion({
+                                    "iAnswerId":req.body.question.iAnswerId,
+                                    "vModeName":req.body.question.vModeName,
+                                    "iQuestionId":req.body.question.iQuestionId,
+                                    "vQuestion":req.body.question.vQuestion,
+                                    "eType":"VSQ"
+                                },function(err,row){
+                                    if(err) throw err;
+                                    cli.blue("update question");
+                                    if(row.affectedRows > 0){
+                                        queries.updateAnswer({
+                                            "iAnswerId":req.body.options[0].iAnswerId,
+                                            "vAnswer":req.body.options[0].vAnswer
+                                        },function (error, row) {
+                                            if(error) throw error;
+                                            cli.blue("update answer");
+                                            if(row.affectedRows > 0){
+                                                res.json({
+                                                    "status":200,
+                                                    "message":"Update Successfully."
+                                                })
+                                            }else{
+                                                res.json({
+                                                    "status": 404,
+                                                    "message": "Something went wrong"
+                                                });
+                                            }
+                                        })
+                                    }else{
+                                        res.json({
+                                            "status": 404,
+                                            "message": "Something went wrong"
+                                        });
+                                    }
+
+                                });
+
+                            }else{
+                                cli.blue("VSQ required");
+                                res.json({
+                                    "status": 404,
+                                    "message": "Please fill all required value"
+                                });
+                            }
+                        }
+                    }else{
+                        res.json({
+                            "status":404,
+                            "message":"Please fill all required value"
+                        });
+                    }
+                }else{
+                    res.json({
+                        "status":404,
+                        "message":"User not exsits"
+                    })
+                }
+            });
+
+            /**
+             * END Question Edit Operation
+             */
+
+
+            /**
+             * BEGIN Question Add Operataion
+             */
+            app.post('/questionadd',passport.authenticate('jwt',{session:false}),function(req,res){
+                if(req.user.length > 0){
+                    if(!validator.isEmpty(req.body.question.eType)){
+                        if(req.body.question.eType == "MCQ"){
+                            if(
+                                !validator.isEmpty(req.body.question.vModeName) &&
+                                !validator.isEmpty(req.body.question.vQuestion) &&
+                                req.body.options.length == 4 &&
+                                !validator.isEmpty(req.body.options[0].vAnswer) &&
+                                !validator.isEmpty(req.body.options[0].isAnswer.toString()) &&
+                                !validator.isEmpty(req.body.options[1].vAnswer) &&
+                                !validator.isEmpty(req.body.options[1].isAnswer.toString()) &&
+                                !validator.isEmpty(req.body.options[2].vAnswer) &&
+                                !validator.isEmpty(req.body.options[2].isAnswer.toString()) &&
+                                !validator.isEmpty(req.body.options[3].vAnswer) &&
+                                !validator.isEmpty(req.body.options[3].isAnswer.toString())){
+                                var tempiQuestionId = "";
+                                queries.insertQuestion({
+                                    "vModeName":req.body.question.vModeName,
+                                    "vQuestion":req.body.question.vQuestion,
+                                    "eType":req.body.question.eType,
+                                },function(err,row){
+                                    if(err) throw err;
+                                    if(row.insertId > 0){
+                                        tempiQuestionId = row.insertId;
+                                        for(var i = 0;i<req.body.options.length;i++){
+                                            if(req.body.options[i].isAnswer == true){
+                                                queries.insertAnswer({
+                                                    "iQuestionId":row.insertId,
+                                                    "vAnswer":req.body.options[i].vAnswer
+                                                },function(err,info){
+                                                    if(err) throw err;
+                                                    if(info.insertId > 0){
+                                                        queries.updateAfterInsertQuestion({
+                                                            "iAnswerId":info.insertId,
+                                                            "iQuestionId":tempiQuestionId
+                                                        },function (errors,details) {
+                                                             if(errors) throw errors;
+                                                        });
+                                                    }else{
+                                                        res.json({
+                                                            "status": 404,
+                                                            "message": "Something went wrong"
+                                                        });
+                                                    }
+                                                });
+                                            }else{
+                                                queries.insertAnswer({
+                                                    "iQuestionId":row.insertId,
+                                                    "vAnswer":req.body.options[i].vAnswer
+                                                },function(err,info){
+                                                    if(err) throw err;
+                                                });
+                                            }
+                                        }
+                                        res.json({
+                                            "status":200,
+                                            "message":"Question inserted successfully."
+                                        });
+                                    }else{
+                                        res.json({
+                                            "status": 404,
+                                            "message": "Something went wrong"
+                                        });
+                                    }
+                                })
+                            }else{
+                                res.json({
+                                    "status": 404,
+                                    "message": "Please fill all required value"
+                                });
+                            }
+                        }else{
+                            cli.blue("VSQ call");
+                            if(!validator.isEmpty(req.body.question.vModeName) &&
+                                !validator.isEmpty(req.body.question.vQuestion) &&
+                                req.body.options.length == 1 &&
+                                !validator.isEmpty(req.body.options[0].vAnswer)){
+                                var tempiQuestionId = "";
+                                queries.insertQuestion({
+                                    "vModeName":req.body.question.vModeName,
+                                    "vQuestion":req.body.question.vQuestion,
+                                    "eType":req.body.question.eType,
+                                },function(err,row){
+                                    if(err) throw err;
+                                    if(row.insertId > 0){
+                                        tempiQuestionId = row.insertId;
+
+                                        queries.insertAnswer({
+                                               "iQuestionId":row.insertId,
+                                               "vAnswer":req.body.options[0].vAnswer
+                                                },function(err,info){
+                                                    if(err) throw err;
+                                                    if(info.insertId > 0){
+                                                        queries.updateAfterInsertQuestion({
+                                                            "iAnswerId":info.insertId,
+                                                            "iQuestionId":tempiQuestionId
+                                                        },function (errors,details) {
+                                                            if(errors) throw errors;
+                                                            if(details.affectedRows > 0){
+                                                                res.json({
+                                                                    "status":200,
+                                                                    "message":"Question inserted successfully."
+                                                                });
+                                                            }else{
+                                                                res.json({
+                                                                    "status": 404,
+                                                                    "message": "Something went wrong"
+                                                                });
+                                                            }
+                                                        });
+                                                    }else{
+                                                        res.json({
+                                                            "status": 404,
+                                                            "message": "Something went wrong"
+                                                        });
+                                                    }
+                                                });
+
+                                    }else{
+                                        res.json({
+                                            "status": 404,
+                                            "message": "Something went wrong"
+                                        });
+                                    }
+                                })
+
+                            }else{
+                                res.json({
+                                    "status": 404,
+                                    "message": "Please fill all required value"
+                                });
+                            }
+                        }
+                    }else{
+                        res.json({
+                            "status":404,
+                            "message":"Please fill all required value"
+                        });
+                    }
+                }else{
+                    res.json({
+                        "status":404,
+                        "message":"User not exsits"
+                    })
+                }
+            });
+
+
+
+            /**
+             * END Question Add Operataion
+             */
 
 
 
 
 
-
-
-
-    }
+}
 
 /**
  * Magic happen for data table sorting function

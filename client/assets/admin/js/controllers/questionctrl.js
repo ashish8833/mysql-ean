@@ -24,7 +24,6 @@ angular.module('main').controller('QuestionCtrl',function ($scope,$http,$rootSco
         DTColumnBuilder.newColumn("eType", "Type").withOption('name', 'eType'),
         DTColumnBuilder.newColumn("vQuestion", "Question").withOption('name', 'vQuestion'),
         DTColumnBuilder.newColumn("vAnswer", "Answer").withOption('name', 'vAnswer'),
-        DTColumnBuilder.newColumn("vAnswer", "Answer").withOption('name', 'vAnswer'),
         DTColumnBuilder.newColumn(null).withTitle('Status').notSortable().renderWith(actionsHtml),
         // DTColumnBuilder.newColumn("Status",'Status').withOption('name','Status').notSortable(),
         DTColumnBuilder.newColumn("operation",'Operation').withOption('name','operation').notSortable()
@@ -58,6 +57,8 @@ angular.module('main').controller('QuestionCtrl',function ($scope,$http,$rootSco
     $scope.qOperation = function(id,vOperation,eStatus = ""){
         if(vOperation == 'view'){
             $state.go('admin.questiondetails',{'id':id});
+        }else if(vOperation == 'edit'){
+            $state.go('admin.questionform',{'id':id,'action':'Edit'});
         }else{
             $http({
                 method:'post',
