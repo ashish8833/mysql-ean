@@ -3,7 +3,7 @@ angular.module('main').controller('UsersCtrl',function ($scope,$rootScope,$resou
     //Status Store for every user
     $scope.userStatus = [];
     //Status change event fire
-    $scope.dtInstance = {};
+    $scope.dtInstanceUser = {};
     listUser();
     $scope.onUserStatusChange = function(status,id){
         $rootScope.hideLoad = false;  //Loading Stop For Network Operation Start
@@ -47,6 +47,7 @@ angular.module('main').controller('UsersCtrl',function ($scope,$rootScope,$resou
                 data:postData
             }).then(function(res){
                 toastr.success(res.data.message,"Successs");
+                $scope.dtInstanceUser.reloadData();
                 console.log("Success call");
                 console.log(res);
             },function(err){
@@ -68,7 +69,6 @@ angular.module('main').controller('UsersCtrl',function ($scope,$rootScope,$resou
 
 
     function listUser(){
-
         $scope.dtColumns = [
             //here We will add .withOption('name','column_name') for send column name to the server
             //here we will add .newColumn('column_name','Title for column name')
@@ -97,7 +97,6 @@ angular.module('main').controller('UsersCtrl',function ($scope,$rootScope,$resou
             .withOption('createdRow',function(nRow, aData, iDisplayIndex, iDisplayIndexFull){
                 $compile(nRow)($scope);
             });
-
     }
 
 

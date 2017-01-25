@@ -59,12 +59,12 @@ app.use(express.static(path.join(__dirname, 'node_modules')));
 
 //Web API
 require("./server/routes/web")(app,cli,mail);
-
+require("./server/modules/socket_test")(app,app.io);
 
 //Running Code for Application Socket
 // app.io.on('connection', function(socket){
 //     console.log(socket);
-//     cli.green("User Socket Connected");
+//     cli.blue("User Socket Connected");
 //     console.log('a user connected');
 // });
 // catch 404 and forward to error handler

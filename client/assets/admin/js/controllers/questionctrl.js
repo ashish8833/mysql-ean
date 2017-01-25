@@ -4,7 +4,7 @@ angular.module('main').controller('QuestionCtrl',function ($scope,$http,$rootSco
     /**
      * Generate Question List
      */
-    //listQuestion();
+    $scope.dtInstanceQuestion = {};
     function listQuestion(){
         $rootScope.hideLoad = false;  //Loading Stop For Network Operation Start
         $http.post('/question').then(function(response) {
@@ -69,6 +69,9 @@ angular.module('main').controller('QuestionCtrl',function ($scope,$http,$rootSco
                 console.log("Success call");
                 console.log(res.data.status);
                 if(res.data.status == 200){
+                    if(vOperation == 'delete'){
+                        $scope.dtInstanceQuestion.reloadData();
+                    }
                     toastr.success(res.data.message,"Successs");
                 }else{
                     toastr.error(res.data.message,"Error");

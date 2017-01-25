@@ -99,6 +99,9 @@
 		});
         socket.emit('GTS',{"MSG":'Game to server'});
 		Metronic.init();
+        socket.on('connectToRoom',function(data){
+			console.log(data);
+		});
 //		Layout.init();
 	});
 </script>

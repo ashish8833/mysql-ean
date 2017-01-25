@@ -239,7 +239,7 @@ app.config(function($stateProvider,$urlRouterProvider,$locationProvider,$ocLazyL
 
 	// To define only one db driver - Logout issue (Because WebSql and Indexdb both store data)
     $localForageProvider.config({
-        driver      : localforage.WEBSQL, // Force WebSQL; same as using setDriver()
+        driver      : localforage.INDEXEDDB, // Force WebSQL; same as using setDriver()
         name        : 'Pemdas',
         version     : 1.0,
         size        : 4980736, // Size of database, in bytes. WebSQL-only for now.
