@@ -3,11 +3,11 @@ var roomno = 1;
 var user = [];
 module.exports = function(app,io){
     io.on('connection', function(socket){
-        console.log(socket.id);
-        user.push(socket.id);
         cli.blue("User Socket Connected");
         console.log('a user connected inside the socket file');
-
+        console.log(socket.handshake);
+        console.log(socket.handshake.query.Authorization);
+        user.push(socket.id);
         socket.on("GTS",function(data){
             console.log(data);
             cli.blue("Game to server")
@@ -23,7 +23,6 @@ module.exports = function(app,io){
         socket.on('disconnect',function (data){
             console.log("Socket discunnected");
         });
-
         socket.emit("STG",{"msg":"Server to Game"});
         cli.green(user);
         cli.blue(JSON.stringify(socket.adapter.rooms));
