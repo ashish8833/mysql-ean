@@ -21,7 +21,9 @@
     "datatables": "^1.10.13",
     "font-awesome": ">=4.1.0",
     "jquery": "^3.1.1",
+    "lodash": "^4.17.4",
     "ngstorage": "*",
-    "oclazyload": "^1.0.9"
+    "oclazyload": "^1.0.9",
+    "socket.io-client": "^1.7.2"
   }
 }

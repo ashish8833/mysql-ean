@@ -166,7 +166,53 @@ var Users = {
     },
     //QUESTION MODULE END
 
+    //EXAM MODULE MCQ START
+    ls_mcq_count:function(body,cb){
+        var sWhere = "";
+        var aWhere = [];
+        if(typeof body.eType != 'undefined' && body.eType != "")
+        {
+            sWhere += ' AND eType LIKE ?';
+            aWhere.push('%'+body.eType+'%');
+        }
+        if(typeof body.vModeName != "undefined" && body.vModeName != "")
+        {
+            sWhere += ' OR vModeName LIKE ?';
+            aWhere.push('%'+body.vModeName+'%');
+        }
+        db.query("SELECT COUNT(*) as iTotalRecords FROM tbl_questions JOIN tbl_answers ON tbl_answers.iAnswerId = tbl_questions.iAnswerId WHERE tbl_questions.eStatus != 'd' AND tbl_questions.eType = 'MCQ'"+sWhere,aWhere,cb);
+    },
+    ls_mcq_select:function(body,cb){
+        var sWhere = "";
+        var aWhere = [];
+        var sort = "";
 
+        if(typeof body.eType != 'undefined' && body.eType != "")
+        {
+            sWhere += ' AND eType LIKE ?';
+            aWhere.push('%'+body.eType+'%');
+        }
+        if(typeof body.vModeName != "undefined" && body.vModeName != "")
+        {
+            sWhere += ' OR vModeName LIKE ?';
+            aWhere.push('%'+body.vModeName+'%');
+        }
+        if(typeof body.sort != 'undefined' && body.sort != "") {sort = body.sort};
+        db.query("SELECT tbl_questions.*,tbl_answers.vAnswer, 'n' as eSelected FROM tbl_questions JOIN tbl_answers ON tbl_answers.iAnswerId = tbl_questions.iAnswerId WHERE tbl_questions.eStatus != 'd' AND tbl_questions.eType = 'MCQ'"+sWhere+" ORDER BY "+sort+" LIMIT "+body.offset +" ,"+body.limit,aWhere,cb);
+    },
+    get_mcq_by_Ids:function(body,cb){
+        db.query("SELECT tbl_questions.iQuestionId,tbl_questions.vQuestion, tbl_answers.vAnswer, tbl_answers.iAnswerId FROM tbl_answers JOIN tbl_questions ON tbl_answers.iQuestionId = tbl_questions.iQuestionId WHERE tbl_questions.iQuestionId IN (?)",[body.iQuestionId],cb)
+    },
+    insert_exam:function(body,cb){
+        db.query("INSERT INTO tbl_exams (iUserId,vTitle,vDescription,eStatus,dCreatedDate) VALUES (?,?,?,?,?)",[0,body.vTitle,body.vDescription,"y",dateFormat(new Date(),"yyyy-mm-dd HH:mm:ss")],cb);
+    },
+    insert_exam_schedule:function(body,cb){
+        db.query("INSERT INTO tbl_exam_schedule (iExamId,dExamDate,iWinnerId,dCreatedDate) VALUES (?,?,?,?)",[body.iExamId,dateFormat(new Date(),"yyyy-mm-dd HH:mm:ss"),0,dateFormat(new Date(),"yyyy-mm-dd HH:mm:ss")],cb);
+    },
+    insert_exam_participant:function(body,cb){
+        db.query("INSERT INTO tbl_exam_participant (iScheduleId,iUserId,iTotalQuestion,iRightAnswers,iWrongAnswers,eStatus,dCreatedDate) VALUES (?,?,?,?,?,?,?)",[body.iScheduleId,body.iUserId,0,0,0,"y",dateFormat(new Date(),"yyyy-mm-dd HH:mm:ss")],cb);
+    }
+    //EXAM MODULE MCQ END
 
 };
 module.exports = Users;

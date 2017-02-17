@@ -6,7 +6,7 @@ var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var nodemailer = require('nodemailer'); //For Send Mail
-
+var cors = require('cors');
 //Core Module
 
 
@@ -28,9 +28,12 @@ app.use(logger('dev'));
 app.use(function(req,res,next){
     res.header('Access-Control-Allow-Origin', '*');
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+    res.header("Access-Control-Allow-Credentials",true);
+    res.header("Access-Control-Allow-Methods","POST,GET,OPTIONS");
     next();
 });
 
+app.use(cors());
 //nodemailer setup
 var smtpConfig = {
     host: 'smtp.gmail.com',

@@ -1,5 +1,9 @@
-angular.module('main').controller('QuestionCtrl',function ($scope,$http,$rootScope,toastr,$state,DTOptionsBuilder, DTColumnBuilder,$compile) {
+angular.module('main').controller('QuestionCtrl',function ($scope,$http,$rootScope,toastr,$state,DTOptionsBuilder, DTColumnBuilder,$compile,mySocket) {
     console.log("Question controller call");
+    mySocket.on('listUser',function (data) {
+        $scope.listUser = data;
+    });
+
     $scope.questionStatus = [];
     /**
      * Generate Question List
@@ -51,6 +55,8 @@ angular.module('main').controller('QuestionCtrl',function ($scope,$http,$rootSco
         var temp = '<input bs-switch ng-model="questionStatus['+data.iQuestionId+']" class="switch-small" type="checkbox" ng-true-value="&apos;y&apos;" ng-false-value="&apos;n&apos;" ng-change="qOperation('+data.iQuestionId+',&apos;status&apos;,questionStatus['+data.iQuestionId+'])">';
         return temp;
     }
+
+    
     /**
      * Question Operation View,Status,Delete
      */

@@ -18,9 +18,9 @@ module.exports = function (app,cli,mail) {
             console.log("lgoin page call"+req);
             res.render('index');
         });
-        app.get('/*', function(req, res) {
-            res.sendfile('index'); // load the single view file (angular will handle the page changes on the front-end)
-        });
+        // app.get('/*', function(req, res) {
+        //     res.sendfile('index'); // load the single view file (angular will handle the page changes on the front-end)
+        // });
         app.post('/login',function(req,res){
                 var body = req.body;
                 var $status = 404;
@@ -461,6 +461,9 @@ module.exports = function (app,cli,mail) {
                 }
             });
 
+            
+
+
             app.post('/list_q',function (req,res) {
                 var obj = {
                     'vModeName':req.body.search.value,
@@ -507,7 +510,7 @@ module.exports = function (app,cli,mail) {
                 });
             });
 
-           /**
+            /**
              *  Question Operation View,Status,Delete
              */
             app.post('/questionoperation',passport.authenticate('jwt',{session:false}),function(req,res){
@@ -872,8 +875,91 @@ module.exports = function (app,cli,mail) {
             /**
              * END Question Add Operataion
              */
+            
+
+            /**
+             * BEGIN List Mcq question
+             */
+            
+             app.post('/list_mcq',function (req,res) {
+                var obj = {
+                    'vModeName':req.body.search.value,
+                    'eType':req.body.search.value
+                };
+                queries.ls_mcq_count(obj,function(err,record){
+                    if(err) throw err;
+                    var iTotalRecords = parseInt(record[0].iTotalRecords);
+                    var iDisplayLength = parseInt(req.body.length);
+                    iDisplayLength = iDisplayLength < 0 ? iTotalRecords : iDisplayLength;
+                    var iDisplayStart = parseInt(req.body.start);
+                    var end = iDisplayStart + iDisplayLength;
+                    end = end > iTotalRecords ? iTotalRecords : end;
+                    var obj = {
+                        'limit': end,
+                        'offset': iDisplayStart,
+                        'vModeName':req.body.search.value,
+                        'eType':req.body.search.value,
+                        'sort':getSorting(req.body)
+                    }
+                    queries.ls_mcq_select(obj,function(err,question){
+                        if(err) throw err;
+                        var i = 0;
+                        var records = {};
+                        records['draw'] = req.body.draw;
+                        records['recordsTotal'] = iTotalRecords;
+                        records['recordsFiltered'] = iTotalRecords;
+                        records['data'] = [];
+                        for(i=0;i<question.length;i++){
+                            var operation = '<button ng-click="qOperation('+question[i].iQuestionId+',&quot;view&quot;)" title="View"  class="btn btn-success btn-xs">View</button>';
+                            operation+= '<button ng-click="qOperation('+question[i].iQuestionId+',&quot;edit&quot;)" title="Edit"  class="btn btn-warning  btn-xs">Edit</button>';
+                            operation+= '<button ng-click="qOperation('+question[i].iQuestionId+',&quot;delete&quot;)" title="Delete"  class="btn btn-danger  btn-xs">Delete</button>';
+                            records['data'][i] = {"iQuestionId":question[i].iQuestionId,
+                                                  "vModeName":question[i].vModeName,
+                                                  "eType":question[i].eType,
+                                                  "vQuestion":question[i].vQuestion,
+                                                  "vAnswer":question[i].vAnswer,
+                                                  "eStatus":question[i].eStatus,
+                                                  "operation":operation
+                                                 };
+                        }
+                        res.json(records);
+                    })
+                });
+            });
 
 
+            /**
+             * END List Mcq question
+             */
+
+            /**
+             * Generate Exam Start
+             */
+
+            app.post('/generate_exam',passport.authenticate('jwt',{session:false}),function(req,res){
+               /***
+                * vTitle,vDescription
+                */
+               queries.insert_exam({vTitle:req.body.vTitle,vDescription:req.body.vDescription},function(err,rows){
+                   var iExamId  = rows.insertId;
+                   queries.insert_exam_schedule({"iExamId":iExamId},function(err,result){
+                       var iScheduleId = result.insertId;
+                       res.json({
+                           'status':200,
+                           'message':'Success',
+                           'data':{
+                               "iExamId":iExamId,
+                               "iScheduleId":iScheduleId
+                           }
+                       })
+                   });
+                });
+
+            });
+
+            /**
+             * Generate Exam Close
+             */
 
 
 

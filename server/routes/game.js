@@ -81,6 +81,18 @@ module.exports = function (app,cli) {
         }
     });
 
+    app.get('/ws/v1/joinRoom',passport.authenticate('jwt',{session:false}),function(req,res){
+        if(req.user.length > 0){
+            res.status(200).json({
+                'iUserId':req.user[0].iUserId
+            });
+        }else{
+            res.status(404).json({
+                'message':'User Does not exists'
+            });
+        }
+    });
+
     app.get('/ws/v1/logout',passport.authenticate('jwt',{session:false}),function(req,res){
         if (req.user.length > 0){
             queries.logOut({

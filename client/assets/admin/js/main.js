@@ -7,7 +7,8 @@ var app = angular.module('main',['ui.router',
 	'toastr',
     'datatables',
     'ngResource',
-    'frapontillo.bootstrap-switch'
+    'frapontillo.bootstrap-switch',
+    'btford.socket-io'
 ]);
 app.config(function($stateProvider,$urlRouterProvider,$locationProvider,$ocLazyLoadProvider,$localForageProvider,toastrConfig,$qProvider){
     /**
@@ -234,6 +235,60 @@ app.config(function($stateProvider,$urlRouterProvider,$locationProvider,$ocLazyL
                 });
             }]
         }
+    })
+    .state('admin.examuser',{
+            url:'/examuser',
+            templateUrl:'templates/admin/list_examuser.html',
+            data :{ pageTitle:'Exam User List',bodyClass:'page-header-fixed page-sidebar-closed-hide-logo page-sidebar-closed-hide-logo'},
+            controller:'ExamUserCtrl',
+            resolve:{
+                depends:['$ocLazyLoad',function($ocLazyLoad){
+                    console.log("Lazy Load Call");
+                    return $ocLazyLoad.load({
+                        name:'main',
+                        insertBefore:'#ng_load_plugins_before',
+                        files:[
+                            'assets/admin/js/controllers/examuserctrl.js',
+                        ]
+                    });
+                }]
+            }
+    })
+    .state('admin.mcqexam',{
+            url:'/mcqexam',
+            templateUrl:'templates/admin/list_mcq.html',
+            data :{ pageTitle:'Exam Question List',bodyClass:'page-header-fixed page-sidebar-closed-hide-logo page-sidebar-closed-hide-logo'},
+            controller:'McqExamCtrl',
+            resolve:{
+                depends:['$ocLazyLoad',function($ocLazyLoad){
+                    console.log("Lazy Load Call");
+                    return $ocLazyLoad.load({
+                        name:'main',
+                        insertBefore:'#ng_load_plugins_before',
+                        files:[
+                            'assets/admin/js/controllers/mcqexamctrl.js',
+                        ]
+                    });
+                }]
+            }
+    })
+    .state('admin.exam',{
+            url:'/exam',
+            templateUrl:'templates/admin/exam.html',
+            data :{ pageTitle:'Exam User List',bodyClass:'page-header-fixed page-sidebar-closed-hide-logo page-sidebar-closed-hide-logo'},
+            controller:'ExamCtrl',
+            resolve:{
+                depends:['$ocLazyLoad',function($ocLazyLoad){
+                    console.log("Lazy Load Call");
+                    return $ocLazyLoad.load({
+                        name:'main',
+                        insertBefore:'#ng_load_plugins_before',
+                        files:[
+                            'assets/admin/js/controllers/examctrl.js',
+                        ]
+                    });
+                }]
+            }
     });
 	$locationProvider.hashPrefix('');
 
@@ -256,7 +311,7 @@ app.config(function($stateProvider,$urlRouterProvider,$locationProvider,$ocLazyL
     });
 
 });
-
+//!$ecUrepa55W0rd!
 app.run(function($state,$rootScope,$http,$localForage){
 	$rootScope.$on('$stateChangeStart',function(event,toState,fromState,fromParams,$localtion){
 		var currentState = toState.name;
@@ -384,4 +439,11 @@ app.directive('bootstrapSwitch', [
         };
     }
 ]);
+//Factory for Angular-Socket-io
+app.factory('mySocket', function (socketFactory) {
+    return socketFactory({
+        ioSocket: io.connect('http://192.168.10.165:3000')
+    });
+});
+
 
