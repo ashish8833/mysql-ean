@@ -16,6 +16,7 @@
     "angular-ui-bootstrap": "^2.0.1",
     "angular-ui-router": "~0.3.1",
     "app-root-path": "^2.0.1",
+    "async": "^2.1.4",
     "body-parser": "~1.15.2",
     "bootstrap": "~3.3.7",
     "cli-color": "*",
