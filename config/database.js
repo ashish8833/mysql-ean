@@ -7,8 +7,8 @@ module.exports = {
         'host':'localhost',
         'user':'root',
         'debug':true,
-        'password':'root',
-        'port':'8889',
+        'password':'!$ecUrepa55W0rd!',
+        // 'port':'',
         'database':'yudiz_pemdas',
     },
     'users_table':'tbl_users'
