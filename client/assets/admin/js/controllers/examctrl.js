@@ -7,12 +7,13 @@ angular.module('main').controller('ExamCtrl',function ($scope,$http,$rootScope,t
     //         mySocket.emit('exam',{"Questions":examQuestion,"vTitle":"Test","vDescription":Date()});
     //     });
     // });
-    $scope.generateExam = function(){
+    $scope.submitExam = function(){
+        console.log($scope.exam);
         $http({
             method:'post',
             url:'/generate_exam',
             dataType:'json',
-            data:{'vTitle':"test",'vDescription':Date()}
+            data:{'vTitle':$scope.exam.vTitle,'vDescription':$scope.exam.vDescription}
         }).then(function(res){
             console.log("Success call");
             console.log(res.data);
@@ -26,7 +27,6 @@ angular.module('main').controller('ExamCtrl',function ($scope,$http,$rootScope,t
 
     $scope.startExam = function () {
         console.log("startExam call");
-
         $localForage.getItem("examUser").then(function(examUser){
             $localForage.getItem("examQuestion").then(function(examQuestion){
                 $localForage.getItem("iExamId").then(function(iExamId){
@@ -37,7 +37,6 @@ angular.module('main').controller('ExamCtrl',function ($scope,$http,$rootScope,t
                 });
             });
         });
-
     }
 
 
